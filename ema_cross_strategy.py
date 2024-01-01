@@ -1,7 +1,8 @@
+import make_trade
 import mt5_lib
 import indicator_lib
 
-def ema_cross_strategy(symbol, timeframe, ema_one, ema_two):
+def ema_cross_strategy(symbol, timeframe, ema_one, ema_two, balance, amount_to_risk):
     """
     Function which runs the ema cross strategy
     :param symbol: string of the symbol to be queried
@@ -32,10 +33,15 @@ def ema_cross_strategy(symbol, timeframe, ema_one, ema_two):
     # check if ema cross has occured
     if trade_event['ema_cross'].values:
         new_trade = True
+        comment_string = f"EMA_Cross_Strategy_{symbol}"
+        print(comment_string)
+        make_trade_outcome = make_trade.make_trade(balance=balance,comment=comment_string,
+                                                   amount_to_risk=amount_to_risk,symbol=symbol,take_profit=trade_event['take_profit'].values,
+                                                   stop_loss=trade_event['stop_loss'].values, stop_price=trade_event['stop_price'].values)
     else:
-        new_trade = False
+        make_trade_outcome = False
 
-    return new_trade
+    return make_trade_outcome
 
 # Function to determine if trading event has occured
 def det_trade(df, ema_one, ema_two):

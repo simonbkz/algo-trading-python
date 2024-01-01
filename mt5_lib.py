@@ -63,7 +63,6 @@ def initialize_symbol(symbol):
 # Function to query mt5 for the data
 def get_candles_data(symbol, timeframe, number_of_candles):
     # check if there are no more than 50000 candles sticks
-    print(f"timeframe in use: {timeframe}")
     if number_of_candles > 50000:
 
         raise ValueError("no more than 50000 candles can be retrieved")

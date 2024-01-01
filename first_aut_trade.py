@@ -43,5 +43,5 @@ if __name__ == '__main__':
     for symbol in symbols:
         #retrieve data for each candle
         sym_data = mt5_lib.get_candles_data(symbol=symbol, timeframe=timeframe, number_of_candles=10000)
-        df = ema_cross_strategy.ema_cross_strategy(symbol, timeframe, ema_one=50, ema_two= 200)
+        df = ema_cross_strategy.ema_cross_strategy(symbol, timeframe, ema_one=50, ema_two= 200,balance=10000,amount_to_risk=0.01)
         print(f"ema cross signal: {df}")

@@ -2,6 +2,8 @@ import pandas as pd
 import ast
 import MetaTrader5 as mt5
 import talib
+import datetime
+from dateutil.relativedelta import relativedelta
 
 def start_mt5(settings):
     
@@ -215,4 +217,203 @@ def place_order(order_type, symbol, volume, stop_loss, take_profit, comment, sto
         else:
             print(f"order check failed. Details {result}")
 
-    
+def cancel_order(order_number):
+    """
+    Function to cancel an order identified by an order number
+    :param order_number: int of the order number
+    :return: Boolean. True means cancelled, False means not cancelled.
+    """
+    # Create the request
+    request = {
+        "action": mt5.TRADE_ACTION_REMOVE,
+        "order": order_number,
+        "comment": "order removed"
+    }
+
+    # Attempt to send the order to MT5
+    try:
+        order_result = mt5.order_send(request)
+        if order_result[0] == 10009:
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Error cancelling order {order_number}. {e}")
+        # More advanced error handling is covered in later videos
+        return False
+
+# Function to cancel a list of open orders
+def cancel_all_orders(order_list):
+    """
+    Function to cancel all open orders in a list
+    :param symbol_list: list of orders
+    :return: Boolean. True if all are cancelled
+    """
+    # Iterate through the list of order numbers
+    for order_number in order_list:
+        # Cancel each one
+        cancel = cancel_order(order_number)
+        # If an order is not cancelled, exit the function
+        if cancel is False:
+            return False
+    # If no exit event, return True
+    return True
+
+# Function to retrieve all open orders from MT5
+def get_all_open_orders():
+    """
+    Function to retrieve all open orders from MetaTrader 5
+    :return: list of orders
+    """
+    return mt5.orders_get()
+
+# Function to retrieve a filtered list of open orders from MT5
+def get_filtered_list_of_orders(symbol, comment):
+    """
+    Function to retrieve a filtered list of open orders from MT5. In this case, filtering is done by
+    symbol and comment
+    :param symbol: string of the symbol
+    :param comment: string of the comment
+    :return: list of orders
+    """
+    # Retrieve open orders, filter by symbol
+    open_orders_by_symbol = mt5.orders_get(symbol)
+    # Check if any orders were retrieved (there might be none)
+    if open_orders_by_symbol is None:
+        return []
+    # Convert the returned orders into a dataframe
+    open_orders_dataframe = pd.DataFrame(list(open_orders_by_symbol), columns=open_orders_by_symbol[0]._asdict().keys())
+    # From the open orders dataframe, filter orders by comment
+    open_orders_dataframe = open_orders_dataframe[open_orders_dataframe['comment'] == comment]
+    # Create a list to store the open order numbers
+    open_orders = []
+    # Iterate through the dataframe and add order numbers to the list
+    for order in open_orders_dataframe['ticket']:
+        open_orders.append(order)
+    # Return the open order numbers
+    return open_orders
+
+# Function to query historic candlestick data from MT5
+def query_historic_data(symbol, timeframe, number_of_candles):
+    """
+    Function to query historic data from MetaTrader 5
+    :param symbol: string of the symbol to query
+    :param timeframe: string of the timeframe to query
+    :param number_of_candles: Number of candles to query. Limited to 50,000
+    :return: dataframe of the queried data
+    """
+    # Check the number of candles less than 50000
+    # Note that MT5 can return far more than 50,000 candles, but this is beyond this tutorial
+    if number_of_candles > 50000:
+        raise ValueError("Select less than 50,000 candles")
+    # Convert the timeframe into MT5 friendly format
+    mt5_timeframe = set_query_timeframe(timeframe=timeframe)
+    # Retrieve the data
+    rates = mt5.copy_rates_from_pos(symbol, mt5_timeframe, 1, number_of_candles)
+    # Convert to a dataframe
+    dataframe = pd.DataFrame(rates)
+    # Add a 'Human Time' column
+    dataframe['human_time'] = pd.to_datetime(dataframe['time'], unit='s')
+    return dataframe
+
+# Function to retrieve data from MT5 using a time range rather than a number of candles
+def query_historic_data_by_time(symbol, timeframe, time_range):
+    """
+    Function to retrieve data from MT5 using a time range rather than a number of candles
+    :param symbol: string of the symbol to be retrieved
+    :param timeframe: string of the candlestick timeframe to be retrieved
+    :param time_range: string of the time range to be retrieved. Options are: 1Month, 3Months, 6Months, 1Year, 2Years, 3Years, 5Years, All
+    :return: dataframe of the queried data
+    """
+    # Convert the timeframe into MT5 friendly format
+    mt5_timeframe = set_query_timeframe(timeframe=timeframe)
+    # Get the end datetime of the time range (i.e. now)
+    end_time = datetime.datetime.now()
+    # Get the start datetime of the time range, based on the time range string
+    if time_range == "1Month":
+        start_time = end_time - relativedelta(months=1)
+    elif time_range == "3Months":
+        start_time = end_time - relativedelta(months=3)
+    elif time_range == "6Months":
+        start_time = end_time - relativedelta(months=6)
+    elif time_range == "1Year":
+        start_time = end_time - relativedelta(years=1)
+    elif time_range == "2Years":
+        start_time = end_time - relativedelta(years=2)
+    elif time_range == "3Years":
+        start_time = end_time - relativedelta(years=3)
+    elif time_range == "5Years":
+        start_time = end_time - relativedelta(years=5)
+    elif time_range == "All":
+        start_time = datetime.datetime(1970, 1, 1)
+    else:
+        raise ValueError("Incorrect time range provided")
+
+    # Retrieve the data
+    rates = mt5.copy_rates_range(symbol, mt5_timeframe,start_time, end_time)
+    # Convert to a dataframe
+    dataframe = pd.DataFrame(rates)
+    # Add a 'Human Time' column
+    dataframe['human_time'] = pd.to_datetime(dataframe['time'], unit='s')
+    return dataframe
+
+# Function to retrieve the pip_size of a symbol from MT5
+def get_pip_size(symbol):
+    """
+    Function to retrieve the pip size of a symbol from MetaTrader 5
+    :param symbol: string of the symbol to be queried
+    :return: float of the pip size
+    """
+    # Get the symbol information
+    symbol_info = mt5.symbol_info(symbol)
+    tick_size = symbol_info.trade_tick_size
+    pip_size = tick_size * 10
+    # Return the pip size
+    return pip_size
+
+# Function to retrieve the base currency of a symbol from MT5
+def get_base_currency(symbol):
+    """
+    Function to retrieve the base currency of a symbol from MetaTrader 5
+    :param symbol: string of the symbol to be queried
+    :return: string of the base currency
+    """
+    # Get the symbol information
+    symbol_info = mt5.symbol_info(symbol)
+    # Return the base currency
+    return symbol_info.currency_base
+
+# Function to retrieve the exchange rate of a symbol from MT5
+def get_exchange_rate(symbol):
+    """
+    Function to retrieve the exchange rate of a symbol from MetaTrader 5
+    :param symbol: string of the symbol to be queried
+    :return: float of the exchange rate
+    """
+    # Get the symbol information
+    symbol_info = mt5.symbol_info(symbol)
+    # Return the exchange rate
+    return symbol_info.bid
+
+# Get the contract size for a symbol
+def get_contract_size(symbol):
+    """
+    Function to retrieve the contract size of a symbol from MetaTrader 5
+    :param symbol: string of the symbol to be queried
+    :return: float of the contract size
+    """
+    # Get the symbol information
+    symbol_info = mt5.symbol_info(symbol)
+    # Return the contract size
+    return symbol_info.trade_contract_size
+
+# Function to get the balance from MT5
+def get_balance():
+    """
+    Function to get the balance from MetaTrader 5
+    :return: float of the balance
+    """
+    # Get the account information
+    account_info = mt5.account_info()
+    # Return the balance
+    return account_info.balance

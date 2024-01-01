@@ -69,26 +69,3 @@ def calc_lot_size(balance, risk_amount, stop_loss, stop_price, symbol, exchange=
     if lot_size >= 10:
         lot_size = 9.99
     return lot_size
-
-# Get Data function
-# todo: Update this accept a timerange
-def get_data(symbol, timeframe, exchange="mt5", ):
-    """
-    Function to retrieve data from supported exchanges. Data is in the form of candlesticks and should be returned as a
-    dataframe
-    :param symbol: string of the symbol to be retrieved
-    :param timeframe: string of the timeframe to be queried
-    :param exchange: string of the exchange to be queried. Default "mt5"
-    :return: dataframe
-    """
-    if exchange == "mt5":
-        # Get the data
-        data = mt5_lib.get_candlesticks(symbol=symbol, timeframe=timeframe, number_of_candles=1000)
-    elif exchange == "binance":
-        # Get the data
-        data = binance_lib.get_candlesticks(symbol=symbol, timeframe=timeframe, number_of_candles=1000)
-    # If unsupported exchange queried, raise an error
-    else:
-        raise ValueError("Exchange not supported")
-    # Return the data
-    return data

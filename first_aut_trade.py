@@ -44,23 +44,4 @@ if __name__ == '__main__':
         #retrieve data for each candle
         sym_data = mt5_lib.get_candles_data(symbol=symbol, timeframe=timeframe, number_of_candles=10000)
         df = ema_cross_strategy.ema_cross_strategy(symbol, timeframe, ema_one=50, ema_two= 200)
-        # getting ema cross signals
-        ema_cross_trade_signals = df[df['ema_cross'] == True]
-        last_signal = df.tail(1).copy()
-        print(f"last signal: {last_signal}")
-
-        if last_signal['ema_cross'].values:
-            print("signal found")
-        else:
-            print("no signal for this candle")
-
-    #     ema_50 = indicator_lib.calc_custom_ema(df=sym_data, ema_size=50)
-    #     ema_20 = indicator_lib.calc_custom_ema(df=sym_data, ema_size=20)
-    #     ema_200 = indicator_lib.calc_custom_ema(df=sym_data, ema_size=200)
-    #     ema_cross = indicator_lib.ema_cross_calc(df=sym_data, ema_one=50, ema_two=200)
-    #     ema_cross = ema_cross[ema_cross['ema_cross'] == True]
-    #     print(ema_cross)
-    # init_symbol = mt5_lib.initialize_symbol(symbol)
-    # print(f"initialized symbols outcome: {init_symbol}")
-
-    # git@github.com:simonbkz/algo-trading-python.git
+        print(f"ema cross signal: {df}")

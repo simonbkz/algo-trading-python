@@ -15,7 +15,8 @@ def ema_cross_strategy(symbol, timeframe, ema_one, ema_two):
     # step 1: Retrieve data
     # step 2: calculate indicator
     # step 3: determine if the trade event has occured
-    # step 4: return information back to the user
+    # step 4: check the previous trade
+    # step 5: return information back to the user
 
     # step 1:
     df = get_data(symbol,timeframe)
@@ -26,7 +27,15 @@ def ema_cross_strategy(symbol, timeframe, ema_one, ema_two):
     # step 3
     df = det_trade(df, ema_one, ema_two)
 
-    return df
+    # step 4: return information back to the user
+    trade_event = df.tail(1).copy()
+    # check if ema cross has occured
+    if trade_event['ema_cross'].values:
+        new_trade = True
+    else:
+        new_trade = False
+
+    return new_trade
 
 # Function to determine if trading event has occured
 def det_trade(df, ema_one, ema_two):

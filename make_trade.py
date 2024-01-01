@@ -1,5 +1,5 @@
+import helper_function
 import mt5_lib
-
 
 def make_trade(balance, comment, amount_to_risk, symbol, take_profit, stop_loss, stop_price):
     """
@@ -31,4 +31,18 @@ def make_trade(balance, comment, amount_to_risk, symbol, take_profit, stop_loss,
     stop_price = float(stop_price)
     stop_price = round(stop_price, 4)
 
-    lot_size =
+    # step 2: Determine lot size
+    lot_size = helper_function.calc_lot_size(balance,amount_to_risk,stop_loss,stop_price,symbol)
+
+    #step 3: send trade to MetaTrader 5
+    if stop_price > stop_loss:
+        trade_type = "BUY_STOP"
+    else:
+        trade_type = "SELL_STOP"
+
+    trade_outcome = mt5_lib.place_order(order_type=trade_type,symbol=symbol,
+                                        volume=lot_size,stop_loss=stop_loss,
+                                        take_profit=take_profit,comment=comment,
+                                        stop_price=stop_price,direct=False)
+    #step 4: return outcome
+    return trade_outcome

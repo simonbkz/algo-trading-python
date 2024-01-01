@@ -48,6 +48,7 @@ if __name__ == '__main__':
         ema_cross_trade_signals = df[df['ema_cross'] == True]
         last_signal = df.tail(1).copy()
         print(f"last signal: {last_signal}")
+
         if last_signal['ema_cross'].values:
             print("signal found")
         else:

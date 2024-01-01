@@ -77,7 +77,6 @@ def det_trade(df, ema_one, ema_two):
                 data.loc[i, 'take_profit'] = take_profit
     return data
 
-
 def calc_indicators(df, ema_one, ema_two):
     """
     Function to calculate the indicators for the ema cross strategy

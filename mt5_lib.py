@@ -68,6 +68,7 @@ def get_candles_data(symbol, timeframe, number_of_candles):
         raise ValueError("no more than 50000 candles can be retrieved")
     
     mt5_timeframe = set_query_timeframe(timeframe)
+    #take max spread in 1 minute
     candles = mt5.copy_rates_from_pos(symbol, mt5_timeframe, 1, number_of_candles)
     df = pd.DataFrame(candles)
     return df

@@ -2,11 +2,13 @@ import json
 import os
 import pandas as pd
 pd.set_option('display.max_columns',None)
+import matplotlib.pyplot as plt
 
 # Custom libraries
 import mt5_lib
 import indicator_lib
 import ema_cross_strategy
+import plot_helper
 
 #location of settings file
 import_file_path = "C:\\Users\\SIMON\\Documents\\trading\\credentials.json"
@@ -42,6 +44,13 @@ if __name__ == '__main__':
     timeframe = settings['mt5']['timeframe'] # we will focus on one timeframe for now, please ensure you only have one time frame in the .json file
     for symbol in symbols:
         #retrieve data for each candle
-        sym_data = mt5_lib.get_candles_data(symbol=symbol, timeframe=timeframe, number_of_candles=10000)
-        df = ema_cross_strategy.ema_cross_strategy(symbol, timeframe, ema_one=50, ema_two= 200,balance=10000,amount_to_risk=0.01)
-        print(f"ema cross signal: {df}")
+        df = mt5_lib.get_candles_data(symbol=symbol, timeframe=timeframe, number_of_candles=10000)
+        out = ema_cross_strategy.ema_cross_strategy(symbol, timeframe, ema_one=50, ema_two= 200,balance=10000,amount_to_risk=0.01)
+        # print(f"ema cross signal: {df}")
+        fig, (ax1, ax2) = plt.subplots(2,1, figsize=(5,7))
+        df.reset_index(inplace=True)
+        out_open = plot_helper.my_plotter(ax1,df['time'],df['open'], {'color':'r'})
+        out_close = plot_helper.my_plotter(ax1, df['time'], df['close'], {'color': 'b'})
+        out_spread = plot_helper.my_plotter(ax2, df['time'], df['spread'], {'color': 'g'})
+        # close_prices = plot_helper.my_plotter(ax2, df['index'], df['close'], {'marker':'o'})
+        plt.show()
